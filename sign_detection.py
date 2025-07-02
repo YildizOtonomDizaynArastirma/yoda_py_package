@@ -79,7 +79,7 @@ class SignDetectionNode(Node):
             # ✅ Görüntü üzerine kutu ve etiket çiz
             cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
             cv2.putText(frame, f'{label} {conf:.2f}', (int(x1), int(y1) - 5),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 50, 50), 2)
 
         # ✅ Yayınla
         self.detection_pub.publish(detection_array)
