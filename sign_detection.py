@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
@@ -7,6 +8,7 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 import torch
+import os
 
 from vision_msgs.msg import Detection2D, Detection2DArray, ObjectHypothesisWithPose, BoundingBox2D
 from vision_msgs.msg import Pose2D, Point2D  # ✅ Doğru tipler
@@ -16,15 +18,25 @@ class SignDetectionNode(Node):
         super().__init__('sign_detection_node')
         self.bridge = CvBridge()
 
+        # ✅ Model yolunu source dizinine ayarla
+        home_dir = os.path.expanduser("~")
+        model_path = os.path.join(home_dir, 'yoda_ws/src/yoda_py_package/yoda_py_package/best.pt')
+        
+        if not os.path.exists(model_path):
+            self.get_logger().error(f"❌ Model dosyası bulunamadı: {model_path}")
+            return
+        
         # ✅ YOLOv8 modelini CPU üzerinde yükle
-        self.model = YOLO('/home/safa/yoda_ws/src/yoda_py_package/yoda_py_package/best.pt')
+        self.model = YOLO(model_path)
         self.model.to('cpu')
         self.model.fuse()
+        
+        self.get_logger().info(f"✅ YOLO model yüklendi: {model_path}")
 
         # ✅ v4l2 kamera görüntü aboneliği
         self.subscription = self.create_subscription(
             Image,
-            '/image_raw',
+            '/yoda/camera/image_raw',
             self.image_callback,
             10)
 
@@ -37,6 +49,8 @@ class SignDetectionNode(Node):
         self.get_logger().info('✅ YOLOv8 Sign Detection Node Başlatıldı.')
 
     def image_callback(self, msg: Image):
+        self.get_logger().info("📷 Görüntü callback çalıştı")
+
         try:
             frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         except Exception as e:
@@ -95,4 +109,3 @@ def main(args=None):
     node.destroy_node()
     rclpy.shutdown()
     cv2.destroyAllWindows()
-

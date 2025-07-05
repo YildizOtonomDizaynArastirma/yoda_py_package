@@ -10,13 +10,17 @@ from sensor_msgs.msg import Imu
 from std_msgs.msg import Float32
 import time
 import math
+from vision_msgs.msg import Detection2DArray
+from std_msgs.msg import Bool
+
+
 
 class SignDecision(Node):   
 
     def __init__(self):    
         super().__init__("sign_decision_node")
         
-        self.sign_ID = 'id_topic'  # Yolodan gelecek olan tabela verileri için topic adı.
+        
         self.imu_rate = '/yoda/imu/data' #imu verilerinin topiği.
         #self.traffic_sign = '' #trafik işaretinin topiği
         self.decision = None  # Tabela kararını tutmak için
@@ -29,12 +33,11 @@ class SignDecision(Node):
         self.is_turning = False  # Dönüş durumunu takip etmek için flag
         self.turn_complete = False  # Dönüşün tamamlandığını takip etmek için flag
         
-        # Subscription'lar
-        self.sign_subscription = self.create_subscription(
-            Float32,
-            self.sign_ID,
-            self.sign_ID_listener_callback,
-            10)
+        self.create_subscription(
+        	Detection2DArray,
+        	'/detections',
+        	self.detection_callback,
+        	10)
 
         self.publisher_ = self.create_publisher(Twist, '/yoda/cmd_vel', 10)
 
@@ -43,6 +46,8 @@ class SignDecision(Node):
             self.imu_rate,
             self.imu_listener_callback,
             10)
+        
+        self.sign_done_pub = self.create_publisher(Bool, '/sign_done', 10)
         
         #self.traffic_sign_subscription = self.create_subscription(
             #<Gelecek veri tipi>,                       verinin sınıfını ekle
@@ -99,6 +104,9 @@ class SignDecision(Node):
     #     self.get_logger().info(f'Received from traffic circle node: {response.message}')     #tekrar doldurulacak
     #     rclpy.shutdown()
 
+    def maneuver_finished(self):
+        self.get_logger().info("✔️ Manevra tamamlandı, /sign_done yayını gönderiliyor.")
+        self.sign_done_pub.publish(Bool(data=True))
 
 
     def start_moving(self):
@@ -109,12 +117,27 @@ class SignDecision(Node):
         self.publisher_.publish(start_msg)
         self.get_logger().info(f"Araç {self.initial_linear_velocity} hızla ileri gidiyor")
 
-    def sign_ID_listener_callback(self, msg):
-        """Tabela ID verisi geldiğinde çağrılır."""
-        self.get_logger().info(f'Alinan veri: {msg.data}')     
-        self.decision = msg.data
-        # Karar verme işlemini başlat
-        self.decision_part()
+    def detection_callback(self, msg: Detection2DArray):
+        if len(msg.detections) == 0:
+            return
+
+        label = msg.detections[0].results[0].hypothesis.class_id
+
+        label_to_id = {
+            'dur': 1.0,
+            'durak': 2.0,
+            'girilmez': 3.0,
+            'kavsak': 4.0
+		}
+
+        if label in label_to_id:
+            sign_id = label_to_id[label]
+            self.get_logger().info(f"YOLO etiketi: {label} → ID: {sign_id}")
+            self.decision = sign_id
+            self.decision_part()
+        else:
+            self.get_logger().warn(f"Bilinmeyen etiket: {label}")
+
 
     def imu_listener_callback(self, msg):
         """IMU'dan gelen açısal verileri işler."""
@@ -163,6 +186,7 @@ class SignDecision(Node):
                 straight_msg.linear.x = self.initial_linear_velocity
                 straight_msg.angular.z = 0.0
                 self.publisher_.publish(straight_msg)
+                self.maneuver_finished()
     
     def calculate_angle_diff(self, start_angle, current_angle):
         """İki açı arasındaki farkı hesaplar (sola dönüş için pozitif)."""
@@ -303,6 +327,7 @@ class SignDecision(Node):
         stop_msg.linear.x = 0.0
         stop_msg.angular.z = 0.0
         self.publisher_.publish(stop_msg)
+        self.maneuver_finished()
 
 def main(args=None):
     rclpy.init(args=args) 
