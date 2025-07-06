@@ -4,23 +4,18 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Imu
-#from example_interfaces.srv import Trigger     # durak noduyla aynı servis tipi ve yolu girilecek
-#from example_interfaces.srv import Trigger     # park noduyla aynı servis tipi ve yolu girilecek
-#from example_interfaces.srv import Trigger     # dönel kavşak noduyla aynı servis tipi ve yolu girilecek
+from std_msgs.msg import Bool 
 from std_msgs.msg import Float32
+from std_msgs.msg import Int32 
 import time
 import math
-from vision_msgs.msg import Detection2DArray
-from std_msgs.msg import Bool
-
-
 
 class SignDecision(Node):   
 
     def __init__(self):    
         super().__init__("sign_decision_node")
         
-        
+        self.sign_ID = 'id_topic'  # Yolodan gelecek olan tabela verileri için topic adı.
         self.imu_rate = '/yoda/imu/data' #imu verilerinin topiği.
         #self.traffic_sign = '' #trafik işaretinin topiği
         self.decision = None  # Tabela kararını tutmak için
@@ -33,13 +28,29 @@ class SignDecision(Node):
         self.is_turning = False  # Dönüş durumunu takip etmek için flag
         self.turn_complete = False  # Dönüşün tamamlandığını takip etmek için flag
         
+        self.traffic_light_id = None
+
+
+        # Subscription'lar
+        self.sign_subscription = self.create_subscription(
+            Float32,
+            self.sign_ID,
+            self.sign_ID_listener_callback,
+            10)
+        
+        #Bu kısım düzeltilecek!!!!!
         self.create_subscription(
-        	Detection2DArray,
-        	'/detections',
-        	self.detection_callback,
-        	10)
+            Int32, 
+            '/traffic_light_id', 
+            self.traffic_light_callback, 
+            10)
 
         self.publisher_ = self.create_publisher(Twist, '/yoda/cmd_vel', 10)
+
+
+        self.maneuver_pub = self.create_publisher(Bool, '/start_maneuver', 10)    #Durak ile ilgili
+        self.park_pub = self.create_publisher(Bool, '/start_parking', 10)       #park ile ilgili
+        
 
         self.imu_subscription = self.create_subscription(
             Imu,                   
@@ -47,66 +58,29 @@ class SignDecision(Node):
             self.imu_listener_callback,
             10)
         
-        self.sign_done_pub = self.create_publisher(Bool, '/sign_done', 10)
         
-        #self.traffic_sign_subscription = self.create_subscription(
-            #<Gelecek veri tipi>,                       verinin sınıfını ekle
-            #self.traffic_sign,                         sadece yorum satırını sil
-            #self.traffic_sign_listener_callback,       sadece yorum satırını sil
-            #10                                         sadece yorum satırını sil
-        #    )
-        
-        
-        # self.station_client = self.create_client(Trigger, 'station_service')     #servis tipi ve servis adı girilecek
-        # while not self.station_client.wait_for_service(timeout_sec=1.0):
-        #     self.get_logger().info('Waiting for Station Node (Service)...')
-
-        # self.park_client = self.create_client(Trigger, 'park_service')     #servis tipi ve servis adı girilecek
-        # while not self.park_client.wait_for_service(timeout_sec=1.0):
-        #     self.get_logger().info('Waiting for Park Node (Service)...')
-
-        # self.traffic_circle_client = self.create_client(Trigger, 'traffic_circle_service')     #servis tipi ve servis adı girilecek
-        # while not self.traffic_circle_client.wait_for_service(timeout_sec=1.0):
-        #     self.get_logger().info('Waiting for traffic circle Node (Service)...')
-
-        # Düzenli kontroler için timer eklendi. 0.5 saniyede bir timer_callback fonksiyonunu çalıştıracak.
         self.timer = self.create_timer(0.5, self.timer_callback)
         
         # Başlangıçta hareket et
         self.start_moving()
     
-    #def send_station_request(self):
-    #    station_request = Trigger.Request()             #bu kısmı düzenle, servis tipi
-    #    station_future = self.station_client.call_async(station_request)    
-    #    station_future.add_done_callback(self.station_callback)
-    #def station_callback(self, station_future):
-    #    response = station_future.result()   
-    #    self.get_logger().info(f'Received from station node: {response.message}')     #tekrar doldurulacak
-    #    rclpy.shutdown()
+    #Durak için
+    def maneuver_for_station(self):
+        msg = Bool()
+        msg.data = True
+        self.maneuver_pub.publish(msg)
         
-
-    # def send_park_request(self):
-    #     park_request = Trigger.Request()             #bu kısmı düzenle, servis tipi
-    #     park_future = self.park_client.call_async(park_request)    
-    #     park_future.add_done_callback(self.park_callback)
-    # def park_callback(self, park_future):
-    #     response = park_future.result()   
-    #     self.get_logger().info(f'Received from park node: {response.message}')     #tekrar doldurulacak
-    #     rclpy.shutdown()
+    #Park için
+    def start_parking(self):
+        msg = Bool()
+        msg.data = True
+        self.park_pub.publish(msg)
 
 
-    # def send_traffic_circle_request(self):
-    #     traffic_circle_request = Trigger.Request()             #bu kısmı düzenle, servis tipi
-    #     traffic_circle_future = self.traffic_circle_client.call_async(traffic_circle_request)    
-    #     traffic_circle_future.add_done_callback(self.traffic_circle_callback)
-    # def traffic_circle_callback(self, traffic_circle_future):
-    #     response = traffic_circle_future.result()   
-    #     self.get_logger().info(f'Received from traffic circle node: {response.message}')     #tekrar doldurulacak
-    #     rclpy.shutdown()
-
-    def maneuver_finished(self):
-        self.get_logger().info("✔️ Manevra tamamlandı, /sign_done yayını gönderiliyor.")
-        self.sign_done_pub.publish(Bool(data=True))
+    #Trafik işareti için
+    def traffic_light_callback(self, msg):
+        self.traffic_light_id = msg.data
+        self.get_logger().info(f"Trafik ışığı algılandı: {self.traffic_light_id}")
 
 
     def start_moving(self):
@@ -117,27 +91,12 @@ class SignDecision(Node):
         self.publisher_.publish(start_msg)
         self.get_logger().info(f"Araç {self.initial_linear_velocity} hızla ileri gidiyor")
 
-    def detection_callback(self, msg: Detection2DArray):
-        if len(msg.detections) == 0:
-            return
-
-        label = msg.detections[0].results[0].hypothesis.class_id
-
-        label_to_id = {
-            'dur': 1.0,
-            'durak': 2.0,
-            'girilmez': 3.0,
-            'kavsak': 4.0
-		}
-
-        if label in label_to_id:
-            sign_id = label_to_id[label]
-            self.get_logger().info(f"YOLO etiketi: {label} → ID: {sign_id}")
-            self.decision = sign_id
-            self.decision_part()
-        else:
-            self.get_logger().warn(f"Bilinmeyen etiket: {label}")
-
+    def sign_ID_listener_callback(self, msg):
+        """Tabela ID verisi geldiğinde çağrılır."""
+        self.get_logger().info(f'Alinan veri: {msg.data}')     
+        self.decision = msg.data
+        # Karar verme işlemini başlat
+        self.decision_part()
 
     def imu_listener_callback(self, msg):
         """IMU'dan gelen açısal verileri işler."""
@@ -153,15 +112,6 @@ class SignDecision(Node):
         # IMU verisi debug için loglama
         if self.is_turning:
             self.get_logger().info(f"Yaw: {self.yaw_angle:.2f}, Başlangıç: {self.initial_yaw:.2f}")
-
-    #def traffic_sign_listener_callback(self, msg):
-        #self.get_logger().info(f'Alinan veri: {msg.<data gibi bir veri gelecek artık ne çağırıyorsa>}')
-        #self.light = msg.<data gibi bir veri gelecek artık ne çağırıyorsa>
-
-        #if self.light == <kırmızı>:
-            #self.light_id = 0
-        #elif self.light == <yeşil>:
-            #self.light_id = 1
 
 
 
@@ -186,7 +136,6 @@ class SignDecision(Node):
                 straight_msg.linear.x = self.initial_linear_velocity
                 straight_msg.angular.z = 0.0
                 self.publisher_.publish(straight_msg)
-                self.maneuver_finished()
     
     def calculate_angle_diff(self, start_angle, current_angle):
         """İki açı arasındaki farkı hesaplar (sola dönüş için pozitif)."""
@@ -246,29 +195,26 @@ class SignDecision(Node):
 
 
         elif self.decision == 6.0:
-            #call = self.light_id  #Aşağıdaki call silinecek ve bu satırın yorumu açılacak.
-            call = 0        #Buraya trafik ışığı verisi gelecek. 0 ise kırmızı, dur. 1 ise yeşil, geç. 
-            if call == 0:
-                self.get_logger().info("dur")
+            if self.traffic_light_id == 0:
+                self.get_logger().info("🔴 Kırmızı ışık – DUR")
                 self.stop_moving()
-            elif call == 1:
-                self.get_logger().info("duz devam et")
-                self.start_moving()            
+            elif self.traffic_light_id == 1:
+                self.get_logger().info("🟢 Yeşil ışık – HAREKET ET")
+                self.start_moving()          
                 
         elif self.decision == 7.0:
-            self.get_logger().info("Calling the station service...")
-            self.send_station_request()
+            self.get_logger().info("Durak")
+            self.maneuver_for_station()
 
         elif self.decision == 8.0:
-            self.get_logger().info("Calling the park service...")
-            self.send_park_request()
-        
-        elif self.decision == 9.0:
-            self.get_logger().info("Calling the traffic circle service...")
-            self.send_traffic_circle_request()
+            self.get_logger().info("park et")
+            self.start_parking()
+    
 
         else:
             self.get_logger().info(f"Tanımlanmamış karar kodu: {self.decision}")
+
+
 
     def turn_left(self):
         """Aracı sola 90 derece döndürür."""
@@ -327,7 +273,6 @@ class SignDecision(Node):
         stop_msg.linear.x = 0.0
         stop_msg.angular.z = 0.0
         self.publisher_.publish(stop_msg)
-        self.maneuver_finished()
 
 def main(args=None):
     rclpy.init(args=args) 
