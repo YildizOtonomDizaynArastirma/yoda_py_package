@@ -20,6 +20,7 @@ from sensor_msgs.msg import NavSatFix, Imu
 from std_msgs.msg import Float32
 from geometry_msgs.msg import Twist, PoseStamped
 from nav_msgs.msg import Odometry
+from std_msgs.msg import Bool 
 import math
 import time
 
@@ -30,11 +31,13 @@ class ManeuverNode(Node):
     def __init__(self):
         super().__init__('maneuver_node')
         self.dt = 0.1
+        self.start_maneuver = False     #Durak tabelası algılanmadığı sürece bu node çalışmasın diye eklendi.
 
         # Subscribers and Publishers
         # self.odom_sub = self.create_subscription(Odometry, '/yoda/odom', self.odom_callback, 10)
         self.create_subscription(Float32, '/encoder_pub', self.encoder_callback, 10)
         self.create_subscription(Imu, '/bno_data', self.imu_callback, 10)
+        self.create_subscription(Bool, '/start_maneuver', self.start_callback, 10)  #Durak algılandığında çalıştırmak için eklendi
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
         self.timer = self.create_timer(self.dt, self.control_loop)  # 10 Hz
 
@@ -111,7 +114,18 @@ class ManeuverNode(Node):
         y = self.encoder_speed * math.sin(self.current_yaw) #radyan
         self.current_pose = (x,y)
 
+    #durak manevrasının kontrollü olarak başlatılması için eklendi
+    def start_callback(self, msg):
+        if msg.data:
+            self.get_logger().info("Manevra başlatılıyor.")
+            self.start_maneuver = True
+
     def control_loop(self):
+
+        #Durak algılanmadığı sürece bu node'un çalışmasını önler
+        if not self.start_maneuver:
+            return  # Eğer durak sinyali gelmediyse hiçbir şey yapma
+        
         # Update pose and yaw from IMU + encoder before control logic
         if hasattr(self, 'encoder_speed') and self.encoder_speed is not None and \
             hasattr(self, 'current_yaw') and self.current_yaw is not None:

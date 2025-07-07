@@ -5,6 +5,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist
 from cv_bridge import CvBridge
+from std_msgs.msg import Bool
 import cv2
 import numpy as np
 import math
@@ -28,11 +29,15 @@ class ParkingLineDetector(Node):
     
     def __init__(self):
         super().__init__('parking_line_detector')
+
+        self.start_parking = False      #Park alanı algılanmadığı sürece çalışmasın diye eklendi
         
         # ROS2 Publishers and Subscribers
         self.image_subscriber = self.create_subscription(
             Image, '/yoda/camera/image_raw', self.image_callback, 10)
         self.cmd_vel_publisher = self.create_publisher(Twist, '/yoda/cmd_vel', 10)
+
+        self.create_subscription(Bool, '/start_parking', self.start_parking_callback, 10)       #Park algılandığında çalıştırmak için eklendi.
         
         # CV Bridge for image conversion
         self.bridge = CvBridge()
@@ -68,6 +73,16 @@ class ParkingLineDetector(Node):
         
         self.get_logger().info("Parking Line Detector Node Started")
         self.get_logger().info("State: BLIND_DRIVING - Looking for parking lines...")
+
+
+    #Park algoritmasını kontrollü olarak başlatmak için eklendi.
+    def start_parking_callback(self, msg):
+        if msg.data:
+            self.get_logger().info("Park etme tetiklendi!")
+            self.start_parking = True
+
+
+
     
     def image_callback(self, msg):
         """
@@ -221,6 +236,10 @@ class ParkingLineDetector(Node):
         Called at 10 Hz by the timer.
         """
         cmd_vel = Twist()
+
+        #Park tabelası algılanmadığı sürece bu node.un çalışmasını önler.
+        if not self.start_parking:
+            return  # Park etme sinyali gelmediyse hiçbir şey yapma
         
         if self.current_state == ParkingState.BLIND_DRIVING:
             # Drive forward at fixed speed
