@@ -6,7 +6,6 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
 import numpy as np
-from sklearn.pipeline import make_pipeline
 from rclpy.executors import ExternalShutdownException
 
 
