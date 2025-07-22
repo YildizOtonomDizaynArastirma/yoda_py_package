@@ -3,8 +3,49 @@ from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix, Imu
 from std_msgs.msg import Float32
 import numpy as np
-from kalman import ExtendedKalmanFilter, VehicleState, SimulationParams
 from geometry_msgs.msg import PoseStamped
+
+class VehicleState:
+    def __init__(self):
+        self.x = 0.0
+        self.y = 0.0
+        self.vx = 0.0
+        self.vy = 0.0
+        self.theta = 0.0
+
+class SimulationParams:
+    def __init__(self, dt=0.1):
+        self.dt = dt
+
+class ExtendedKalmanFilter:
+    def __init__(self, initial_state, params):
+        self.state = np.array([initial_state.x, initial_state.y, initial_state.vx, initial_state.vy, initial_state.theta])
+        self.params = params
+        self.P = np.eye(5)  # Başlangıç hata kovaryans matrisi
+        self.R_gps = np.eye(2) * 0.1  # GPS ölçüm hatası
+        self.R_encoder = np.eye(1) * 0.01  # Encoder hatası
+        self.R_imu = np.eye(1) * 0.001  # IMU hatası
+
+    def predict(self):
+        dt = self.params.dt
+        x, y, vx, vy, theta = self.state
+
+        # Basit hareket modeli
+        x += vx * dt
+        y += vy * dt
+
+        # Durum vektörünü güncelle
+        self.state = np.array([x, y, vx, vy, theta])
+
+        # Hata kovaryansı (örnek basitleştirilmiş hali)
+        self.P += np.eye(5) * 0.1
+
+    def update(self, measurement, H, R):
+        y = measurement - H @ self.state
+        S = H @ self.P @ H.T + R
+        K = self.P @ H.T @ np.linalg.inv(S)
+        self.state += K @ y
+        self.P = (np.eye(5) - K @ H) @ self.P
 
 class SensorFusionNode(Node):
     def __init__(self):
