@@ -3,18 +3,15 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix
 import math
+import json
+import os
 
-# User-defined origin parameters (set to None to get initial position of the vehicle as reference position)
+# --- User-defined origin parameters (set to None to get initial position of the vehicle as reference position)
 ref_lat = None
 ref_lon = None
 
-# User-defined waypoints (add as many [lat, lon] as needed)
-waypoint_list = [
-    [0.000135, 0], # baslangica gore 15 metre +X
-    [-0.000135, 0], # baslangica gore 15 metre -X
-    [0, 0.000135], # baslangica gore 15 metre +Y
-    [0, -0.000135], # baslangica gore 15 metre -Y
-]
+# JSON input file
+WAYPOINT_FILE = 'waypoints.json'
 
 class GpsTest(Node):
     def __init__(self):
@@ -32,12 +29,9 @@ class GpsTest(Node):
             self.origin_set = False
             self.get_logger().info('No valid reference provided. Waiting for first GPS callback.')
 
-        # Store waypoints (only valid ones)
-        self.waypoints = [
-            (lat, lon) for lat, lon in waypoint_list
-            if self.is_valid_latlon(lat, lon)
-        ]
-        self.get_logger().info(f'{len(self.waypoints)} valid waypoints loaded.')
+        # Load waypoints from JSON file
+        self.waypoints = self.load_waypoints_from_json(WAYPOINT_FILE)
+        self.get_logger().info(f'{len(self.waypoints)} valid waypoints loaded from JSON.')
 
         # Subscribe to GPS topic
         self.subscription = self.create_subscription(NavSatFix, '/yoda/gps/fix', self.callback, 10)
@@ -50,6 +44,30 @@ class GpsTest(Node):
             -180.0 <= lon <= 180.0
         )
 
+    def load_waypoints_from_json(self, filename):
+        waypoints = []
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            filepath = os.path.join(current_dir, filename)
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+
+            if data.get('type') == 'FeatureCollection':
+                for feature in data.get('features', []):
+                    geometry = feature.get('geometry', {})
+                    coords = geometry.get('coordinates', [])
+                    if (
+                        isinstance(coords, list) and len(coords) == 2 and
+                        self.is_valid_latlon(coords[1], coords[0])  # Note: GeoJSON uses [lon, lat]
+                    ):
+                        lat = coords[1]
+                        lon = coords[0]
+                        waypoints.append((lat, lon))
+            else:
+                self.get_logger().warn('Invalid GeoJSON structure in waypoint file.')
+        except Exception as e:
+            self.get_logger().error(f'Failed to load waypoints from JSON: {e}')
+        return waypoints
 
     def callback(self, msg):
         lat = msg.latitude
@@ -74,8 +92,6 @@ class GpsTest(Node):
         self.get_logger().info(
             f'Current GPS: Lat={lat:.6f}, Lon={lon:.6f} '
         )
-
-        # Calculate and print distance to origin (reference)
         self.get_logger().info(
             f'Origin: {self.origin_lat:.6f}, {self.origin_lon:.6f} Distance: ΔX={dx:.2f}, ΔY={dy:.2f} meters'
         )
@@ -84,7 +100,7 @@ class GpsTest(Node):
         for i, (wp_lat, wp_lon) in enumerate(self.waypoints):
             distx, disty = self.distance_to_waypoint(lat, lon, wp_lat, wp_lon)
             self.get_logger().info(
-                f'  -> Waypoint {i+1}: {wp_lat:.6f}, lon={wp_lon:.6f}) Distance: ΔX = {distx:.2f}, ΔY = {disty:.2f} meters'
+                f'  -> Waypoint {i+1}: {wp_lat:.6f}, lon={wp_lon:.6f} Distance: ΔX = {distx:.2f}, ΔY = {disty:.2f} meters'
             )
 
     def distance_to_waypoint(self, current_lat, current_lon, wp_lat, wp_lon):

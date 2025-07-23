@@ -1,0 +1,90 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Başlangıç Noktası",
+          "description": "Araç başlangıç konumu",
+          "local_x": 0,
+          "local_y": 0,
+          "heading": 0
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            30,
+            40
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Görev Noktası 1",
+          "description": "İlk görev noktası",
+          "local_x": 10,
+          "local_y": 5,
+          "heading": 90
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            30.001,
+            40.0005
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Görev Noktası 2",
+          "description": "İkinci görev noktası",
+          "local_x": 20,
+          "local_y": 10,
+          "heading": 180
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            30.002,
+            40.001
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Görev Noktası 3",
+          "description": "Üçüncü görev noktası",
+          "local_x": 30,
+          "local_y": 15,
+          "heading": 270
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            30.003,
+            40.0015
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Park Noktası",
+          "description": "Araç park noktası",
+          "local_x": 40,
+          "local_y": 20,
+          "heading": 0
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            30.004,
+            40.002
+          ]
+        }
+      }
+    ]
+  }
