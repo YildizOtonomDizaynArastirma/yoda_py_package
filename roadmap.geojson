@@ -1,0 +1,388 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.0, 0.0]
+        },
+        "properties": {
+          "id": 0,
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "size": [3, 3, 3, 3],
+          "adjacents": {
+            "north": 1,
+            "west": 4
+          },
+          "exceptions": {
+            "general_exception": "başlangıç noktası, istisnai bişeyler düşünülecek",
+            "north": "",
+            "west": ""
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.0, 0.0]
+        },
+        "properties": {
+          "id": 1,
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "size": [3, 3, 3, 3],
+          "adjacents": {
+            "north": 2,
+            "south": 0,
+            "west": 5
+          },
+          "exceptions": {
+            "general_exception": "",
+            "north": "trafik ışığı",
+            "west": "",
+            "south": ""
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.0, 0.0]
+        },
+        "properties": {
+          "id": 2,
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "size": [3, 3, 3, 3],
+          "adjacents": {
+            "north": 3,
+            "south": 1,
+            "west": 6
+          },
+          "exceptions": {
+            "general_exception": "",
+            "north": "",
+            "west": "",
+            "south": ""
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.0, 0.0]
+        },
+        "properties": {
+          "id": 3,
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "size": [3, 3, 3, 3],
+          "adjacents": {
+            "south": 2,
+            "west": 7
+          },
+          "exceptions": {
+            "general_exception": "burası bir köşe olduğu için size yeniden düzenlenebilir",
+            "west": "yerde sol şeritteki beyaz bişey",
+            "south": ""
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.0, 0.0]
+        },
+        "properties": {
+          "id": 4,
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "size": [3, 3, 3, 3],
+          "adjacents": {
+            "north": 5,
+            "west": 8,
+            "east": 0,
+            "south": "park alanı"
+          },
+          "exceptions": {
+            "general_exception": "",
+            "north": "sola dönüş için manevrayı istisnai olarak geç yapmak lazım",
+            "west": "",
+            "south": "park alanına giriş, istisnai olarak sağa dönme manevrasını erken yapmak lazım",
+            "east": ""
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.0, 0.0]
+        },
+        "properties": {
+          "id": 5,
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "size": [3, 3, 3, 3],
+          "adjacents": {
+            "north": 6,
+            "south": 4,
+            "west": 9,
+            "east": 1
+          },
+          "exceptions": {
+            "general_exception": "",
+            "north": "",
+            "west": "kavşağa giriş (doğudan batıya)",
+            "south": "bu yönde trafik ışığı var",
+            "east": ""
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.0, 0.0]
+        },
+        "properties": {
+          "id": 6,
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "size": [3, 3, 3, 3],
+          "adjacents": {
+            "north": 7,
+            "south": 5,
+            "west": 10,
+            "east": 2
+          },
+          "exceptions": {
+            "general_exception": "",
+            "north": "yerdek beyaz şeyden dolayı sola dönüş zorunlu, 7->3 devre dışı bırakılacak",
+            "west": "tünele giriş (doğudan batıya)",
+            "south": "",
+            "east": ""
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.0, 0.0]
+        },
+        "properties": {
+          "id": 7,
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "size": [3, 3, 3, 3],
+          "adjacents": {
+            "south": 6,
+            "west": 11,
+            "east": 3
+          },
+          "exceptions": {
+            "general_exception": "sol şeritte yerde beyaz bişey var",
+            "west": "birinci durak (bu durak, konumu itibariyle güneye doğru dönmeyi imkansız kılıyor, bu durağa girilecekse 11'den 10'a gidiş devre dışı kalmalı)",
+            "south": "",
+            "east": ""
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.0, 0.0]
+        },
+        "properties": {
+          "id": 8,
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "size": [3, 3, 3, 3],
+          "adjacents": {
+            "north": 9,
+            "west": 12,
+            "east": 4
+          },
+          "exceptions": {
+            "general_exception": "",
+            "north": "kavşağa giriş (güneyden kuzeye)",
+            "west": "",
+            "east": "4 numara park alanına giriş, 8->4 sonrası sağa dönerken erken dönmek gerekiyor."
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.0, 0.0]
+        },
+        "properties": {
+          "id": 9,
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "size": [3, 3, 3, 3],
+          "adjacents": {
+            "north": 10,
+            "south": 8,
+            "west": 13,
+            "east": 5
+          },
+          "exceptions": {
+            "general_exception": "burası bir kavşak olduğundan her yön istisna,kavşaktan sağa dönüş (90° manevra), düz gidiş (180° manevra), sola dönüş (270° manevra) için 3 adet waypoint senaryosu lazım",
+            "north": "",
+            "west": "",
+            "south": "",
+            "east": "bu yönde üçüncü durak var. üçüncü durak için 9->5 zorunluluk"
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.0, 0.0]
+        },
+        "properties": {
+          "id": 10,
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "size": [3, 3, 3, 3],
+          "adjacents": {
+            "north": 11,
+            "south": 9,
+            "west": 14,
+            "east": 6
+          },
+          "exceptions": {
+            "general_exception": "",
+            "south": "kavşağa giriş (kuzeyden güneye)",
+            "east": "tünele giriş (batıdan doğuya)"
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.0, 0.0]
+        },
+        "properties": {
+          "id": 11,
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "size": [3, 3, 3, 3],
+          "adjacents": {
+            "south": 10,
+            "west": 15,
+            "east": 7
+          },
+          "exceptions": {
+            "general_exception": "",
+            "south": "eğer birinci durağa girilecekse bu yönde gidiş devre dışı kalacak",
+            "east": "11->7 yapınca sağ şeritte yerde beyaz bişey var (önemsiz)"
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.0, 0.0]
+        },
+        "properties": {
+          "id": 12,
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "size": [3, 3, 3, 3],
+          "adjacents": {
+            "north": 13,
+            "east": 8
+          },
+          "exceptions": {
+            "general_exception": "burası bir köşe olduğu için size yeniden düzenlenebilir",
+            "north": "",
+            "east": ""
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.0, 0.0]
+        },
+        "properties": {
+          "id": 13,
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "size": [3, 3, 3, 3],
+          "adjacents": {
+            "north": 14,
+            "south": 12,
+            "east": 9
+          },
+          "exceptions": {
+            "general_exception": "",
+            "north": "",
+            "south": "",
+            "east": "kavşağa giriş (batıdan doğuya)"
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.0, 0.0]
+        },
+        "properties": {
+          "id": 14,
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "size": [3, 3, 3, 3],
+          "adjacents": {
+            "north": 15,
+            "south": 13,
+            "east": 10
+          },
+          "exceptions": {
+            "general_exception": "",
+            "south": "bu yönde trafik ışığı var",
+            "east": "eğer ikinci durağa girilecekse bu yönde gidiş devre dışı kalacak"
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.0, 0.0]
+        },
+        "properties": {
+          "id": 15,
+          "local_x": 0.0,
+          "local_y": 0.0,
+          "size": [3, 3, 3, 3],
+          "adjacents": {
+            "south": 14,
+            "east": 11
+          },
+          "exceptions": {
+            "general_exception": "burası bir köşe olduğu için size yeniden düzenlenmeli",
+            "south": "bu yönde birinci durak var, eğer girilecekse güneye gidiş devre dışı kalacak",
+            "east": ""
+          }
+        }
+      }
+    ]
+  }
+  
